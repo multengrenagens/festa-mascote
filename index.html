@@ -1,28 +1,38 @@
 <!DOCTYPE html>
-<html>
+<html lang="pt-br">
 <head>
+    <meta charset="UTF-8">
     <title>Mascote em RA</title>
-    <!-- Este script é gratuito e faz a RA funcionar -->
+    <!-- Script do model-viewer -->
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; background: #f0f0f0; }
+        body { margin: 0; background: #f0f0f0; overflow: hidden; }
         model-viewer { width: 100vw; height: 100vh; }
+        
+        /* Botão para ativar a RA */
         .btn-ra {
             position: absolute; bottom: 50px; left: 50%;
             transform: translateX(-50%);
             padding: 15px 25px; background: #007bff;
             color: white; border: none; border-radius: 30px;
             font-family: sans-serif; font-weight: bold;
+            cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
     </style>
 </head>
 <body>
 
     <model-viewer 
+        id="mascote"
         src="mascote.glb" 
-        ar ar-modes="webxr scene-viewer quick-look" 
-        camera-controls shadow-intensity="1" 
+        ar 
+        ar-modes="webxr scene-viewer quick-look" 
+        ar-scale="auto" 
+        scale="0.2 0.2 0.2" 
+        camera-controls 
+        shadow-intensity="1" 
         touch-action="pan-y">
+        
         <button slot="ar-button" class="btn-ra">
             ✨ VER NO MEU ESPAÇO
         </button>
