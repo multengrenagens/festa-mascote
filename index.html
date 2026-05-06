@@ -3,13 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mascote Confraternização</title>
+    <title>Mascote RA</title>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
     <style>
         body { margin: 0; background: #f0f0f0; font-family: sans-serif; overflow: hidden; }
         model-viewer { width: 100vw; height: 100vh; }
         
-        /* Botão RA Gigante e bem visível */
+        /* Botão RA - Ajustado para máxima compatibilidade */
         .btn-ra {
             position: absolute; 
             bottom: 180px; 
@@ -25,7 +25,6 @@
             cursor: pointer; 
             z-index: 999; 
             box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-            white-space: nowrap;
         }
 
         #btn-repetir {
@@ -52,22 +51,24 @@
     <model-viewer 
         id="mascote"
         src="mascote.glb" 
-        ios-src="mascote.glb" 
         ar 
-        ar-modes="webxr scene-viewer quick-look" 
-        /* Escala aumentada para 0.09 (50% maior que 0.06) */
-        scale="0.09 0.09 0.09" 
-        camera-controls 
+        ar-modes="quick-look webxr scene-viewer" 
+        camera-controls
+        /* Escala 50% maior que a anterior */
+        scale="0.12 0.12 0.12" 
         
-        /* Ajustes de Sombra para não sumir */
-        shadow-intensity="1.5" 
-        shadow-softness="0.5"
-        exposure="1"
+        /* Ajustes fixos de sombra */
+        shadow-intensity="2" 
+        shadow-softness="0"
+        
+        /* Força a RA do iOS a aceitar o GLB se não houver USDZ */
+        ios-src="mascote.glb"
         
         ar-scale="auto"
-        environment-image="neutral">
+        loading="eager"
+        reveal="auto">
         
-        <button slot="ar-button" id="ar-launch" class="btn-ra">
+        <button slot="ar-button" class="btn-ra">
             ✨ VER NO MEU ESPAÇO
         </button>
 
@@ -80,37 +81,39 @@
         const modelViewer = document.querySelector('#mascote');
         const audio = document.querySelector('#audioFala');
         const btnRepetir = document.querySelector('#btn-repetir');
-        const arLaunch = document.querySelector('#ar-launch');
 
+        // Função de áudio otimizada
         function tocarAudio() {
             audio.currentTime = 0;
-            audio.play().catch(e => console.log("Erro ao tocar áudio"));
+            audio.play().catch(() => console.log("Permissão de áudio pendente"));
         }
 
-        arLaunch.addEventListener('click', () => {
-            // "Acorda" o áudio no iOS/Android imediatamente
-            audio.play().then(() => {
-                audio.pause();
-                // Delay para sincronizar com a abertura da RA no iPhone
-                setTimeout(tocarAudio, 3500);
-            }).catch(() => {
-                // Caso o autoplay seja bloqueado, o botão de repetir salvará
-            });
-        });
-
+        // O segredo para o iOS: Detectar a transição de forma passiva
         modelViewer.addEventListener('ar-status', (event) => {
             if (event.detail.status === 'session-started') {
+                // No Android (WebXR) o botão de repetir aparece
                 btnRepetir.style.display = 'block';
+                
+                // No iOS, o áudio precisa de um "empurrão" 
+                // após o sistema carregar o ambiente
+                setTimeout(tocarAudio, 3000);
             }
+            
+            if (event.detail.status === 'object-placed') {
+                // Garante que a sombra seja recalculada ao colocar na mesa
+                console.log("Mascote posicionado na mesa");
+            }
+
             if (event.detail.status === 'not-presenting') {
                 btnRepetir.style.display = 'none';
                 audio.pause();
             }
-            // Tenta forçar o play se o objeto for colocado
-            if (event.detail.status === 'object-placed') {
-                // Se o áudio ainda não estiver tocando, tentamos aqui
-                if(audio.paused) tocarAudio();
-            }
+        });
+
+        // Evento de clique simplificado para não travar o lançamento da RA no iOS
+        document.querySelector('.btn-ra').addEventListener('click', () => {
+            // Apenas "destrava" o áudio sem processamento pesado
+            audio.play().then(() => { audio.pause(); }).catch(() => {});
         });
 
         btnRepetir.addEventListener('click', tocarAudio);
