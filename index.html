@@ -5,9 +5,10 @@
     <title>Mascote em RA</title>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; background: #f0f0f0; overflow: hidden; }
+        body { margin: 0; background: #f0f0f0; overflow: hidden; font-family: sans-serif; }
         model-viewer { width: 100vw; height: 100vh; }
         
+        /* Botão para entrar na RA */
         .btn-ra {
             position: absolute; bottom: 150px; left: 50%;
             transform: translateX(-50%); padding: 20px 40px; 
@@ -16,12 +17,17 @@
             cursor: pointer; z-index: 100;
         }
 
-        /* Botão de Repetir (Aparece em cima do mascote na RA) */
-        .btn-repetir {
-            background: #28a745; color: white; border: none;
-            border-radius: 10px; padding: 10px 15px;
-            font-weight: bold; cursor: pointer;
-            display: none; /* Escondido até o áudio acabar */
+        /* Botão de Áudio que aparece DENTRO da RA */
+        #controles-ra {
+            position: absolute; bottom: 50px; left: 50%;
+            transform: translateX(-50%); z-index: 200;
+            display: none; /* Escondido por padrão */
+        }
+
+        .btn-audio {
+            padding: 15px 30px; background: #28a745; color: white;
+            border: none; border-radius: 30px; font-weight: bold;
+            font-size: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
     </style>
 </head>
@@ -29,74 +35,59 @@
 
     <audio id="audioFala" src="fala.mp3" preload="auto"></audio>
 
-    <!-- Usamos scale 0.05 para ser 50% menor que o anterior -->
+    <!-- Forçamos o webxr primeiro para manter o controle do áudio -->
     <model-viewer 
         id="mascote"
         src="mascote.glb" 
-        ar ar-modes="webxr scene-viewer quick-look" 
-        ar-scale="auto" 
+        ar 
+        ar-modes="webxr scene-viewer" 
         scale="0.05 0.05 0.05" 
-        camera-controls shadow-intensity="1">
+        camera-controls 
+        shadow-intensity="1">
         
-        <button slot="ar-button" id="ar-button" class="btn-ra">
+        <button slot="ar-button" class="btn-ra">
             ✨ VER NO MEU ESPAÇO
         </button>
 
-        <!-- Ponto de interação que segue o personagem na RA -->
-        <button slot="hotspot-repetir" id="hotspot-repetir" 
-            class="btn-repetir" 
-            data-position="0m 1m 0m" 
-            data-normal="0m 0m 1m">
-            🔄 Ouvir de novo
-        </button>
+        <!-- Interface de controle que o model-viewer permite mostrar na RA -->
+        <div id="controles-ra">
+            <button class="btn-audio" id="play-repetir">🔊 OUVIR MENSAGEM</button>
+        </div>
     </model-viewer>
 
     <script>
         const modelViewer = document.querySelector('#mascote');
         const audio = document.querySelector('#audioFala');
-        const btnRepetir = document.querySelector('#hotspot-repetir');
-        const arButton = document.querySelector('#ar-button');
+        const painelControle = document.querySelector('#controles-ra');
+        const btnPlay = document.querySelector('#play-repetir');
 
-        // 1. Destrava o áudio no clique mas força silêncio inicial
-        arButton.addEventListener('click', () => {
-            audio.play().then(() => {
+        // 1. Monitora a entrada na RA
+        modelViewer.addEventListener('ar-status', (event) => {
+            if (event.detail.status === 'session-started') {
+                // Usuário entrou na RA: Mostra o botão de Play
+                painelControle.style.display = 'block';
+            } else if (event.detail.status === 'not-presenting') {
+                // Usuário saiu da RA: Esconde o botão e para o áudio
+                painelControle.style.display = 'none';
                 audio.pause();
                 audio.currentTime = 0;
-            }).catch(() => {});
-        });
-
-        // 2. Só toca quando o objeto for EFETIVAMENTE colocado na cena
-        modelViewer.addEventListener('ar-status', (event) => {
-            if (event.detail.status === 'object-placed') {
-                // Esconde botão de repetir se estiver visível de uma vez anterior
-                btnRepetir.style.display = "none";
-                
-                // Pequeno delay para garantir que a interface de RA carregou
-                setTimeout(() => {
-                    audio.currentTime = 0;
-                    audio.play();
-                }, 1500); 
             }
         });
 
-        // 3. Quando o áudio terminar, mostra a opção de "Ouvir novamente"
-        audio.onended = () => {
-            // Mostra o botão flutuante em cima do boneco
-            btnRepetir.style.display = "block";
-        };
-
-        // 4. Função do botão de repetir dentro da RA
-        btnRepetir.addEventListener('click', () => {
-            btnRepetir.style.display = "none";
+        // 2. Ação do botão de Play/Repetir
+        btnPlay.addEventListener('click', () => {
             audio.currentTime = 0;
             audio.play();
+            btnPlay.innerText = "🔄 OUVIR NOVAMENTE";
         });
 
-        // Se sair da RA, limpa tudo
+        // 3. Auto-play opcional quando o objeto for colocado (apenas se o navegador permitir)
         modelViewer.addEventListener('ar-status', (event) => {
-            if (event.detail.status === 'not-presenting') {
-                audio.pause();
-                btnRepetir.style.display = "none";
+            if (event.detail.status === 'object-placed') {
+                // Tentativa de play automático ao detectar a mesa
+                audio.play().catch(() => {
+                    console.log("Play automático bloqueado. Aguardando clique no botão.");
+                });
             }
         });
     </script>
