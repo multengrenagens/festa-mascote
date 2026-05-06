@@ -23,7 +23,6 @@
             font-weight: bold;
             cursor: pointer; 
             box-shadow: 0 6px 15px rgba(0,0,0,0.4);
-            white-space: nowrap;
             z-index: 100;
         }
     </style>
@@ -40,8 +39,7 @@
         ar-scale="auto" 
         scale="0.05 0.05 0.05" 
         camera-controls 
-        shadow-intensity="1" 
-        touch-action="pan-y">
+        shadow-intensity="1">
         
         <button slot="ar-button" id="ar-button" class="btn-ra">
             ✨ VER NO MEU ESPAÇO
@@ -53,31 +51,40 @@
         const audio = document.querySelector('#audioFala');
         const arButton = document.querySelector('#ar-button');
 
-        // 1. Desbloqueia o áudio no clique, mas NÃO toca ainda
+        let raAtiva = false;
+
+        // 1. O clique APENAS libera o áudio (destrava o navegador)
         arButton.addEventListener('click', () => {
             audio.play().then(() => {
                 audio.pause();
                 audio.currentTime = 0;
-            }).catch(e => console.log("Áudio aguardando RA..."));
+            }).catch(() => {});
         });
 
-        // 2. O SEGREDO: Só toca quando o status for "session-started" 
-        // e o objeto for efetivamente colocado no mundo real.
+        // 2. Monitora a mudança de estado para RA
         modelViewer.addEventListener('ar-status', (event) => {
-            if (event.detail.status === 'object-placed') {
-                // Reinicia o áudio para garantir que comece do zero
+            // "session-started" significa que a câmera abriu
+            if (event.detail.status === 'session-started') {
+                raAtiva = true;
+            } 
+            
+            // "object-placed" significa que o boneco apareceu na mesa
+            if (event.detail.status === 'object-placed' && raAtiva) {
+                // Resetamos e tocamos com um atraso para garantir que a tela já mudou
                 audio.currentTime = 0;
-                
-                // Pequeno delay de 500ms para garantir que a transição visual terminou
                 setTimeout(() => {
                     audio.play();
-                }, 500);
+                    // Resetamos a trava para não tocar de novo se ele perder o rastreio e achar a mesa de novo
+                    raAtiva = false; 
+                }, 1200); // 1.2 segundos é o tempo médio de transição de tela
             }
-        });
 
-        // 3. Impede que o áudio pare se o usuário sair e voltar rápido
-        audio.addEventListener('ended', () => {
-            console.log("Áudio finalizado com sucesso.");
+            // Se o usuário sair da RA, paramos o áudio
+            if (event.detail.status === 'not-presenting') {
+                audio.pause();
+                audio.currentTime = 0;
+                raAtiva = false;
+            }
         });
     </script>
 
