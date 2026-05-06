@@ -24,17 +24,17 @@
             cursor: pointer; 
             box-shadow: 0 6px 15px rgba(0,0,0,0.4);
             white-space: nowrap;
+            z-index: 100;
         }
     </style>
 </head>
 <body>
 
-    <!-- Elemento de áudio escondido -->
-    <audio id="audioFala" src="fala.mp3"></audio>
+    <audio id="audioFala" src="fala.mp3" preload="auto"></audio>
 
     <model-viewer 
         id="mascote"
-        src="mascotePalmas.glb" 
+        src="mascote.glb" 
         ar 
         ar-modes="webxr scene-viewer quick-look" 
         ar-scale="auto" 
@@ -43,7 +43,7 @@
         shadow-intensity="1" 
         touch-action="pan-y">
         
-        <button slot="ar-button" class="btn-ra">
+        <button slot="ar-button" id="ar-button" class="btn-ra">
             ✨ VER NO MEU ESPAÇO
         </button>
     </model-viewer>
@@ -51,22 +51,30 @@
     <script>
         const modelViewer = document.querySelector('#mascote');
         const audio = document.querySelector('#audioFala');
+        const arButton = document.querySelector('#ar-button');
 
-        // Detecta quando o usuário entra no modo Realidade Aumentada
+        // PASSO 1: O segredo está aqui. 
+        // Quando o usuário clica no botão, nós "acordamos" o áudio.
+        arButton.addEventListener('click', () => {
+            audio.play().then(() => {
+                audio.pause(); // Toca e pausa instantaneamente para ganhar permissão do sistema
+                audio.currentTime = 0;
+            }).catch(e => console.log("Erro ao pré-carregar áudio:", e));
+        });
+
+        // PASSO 2: Quando o objeto for colocado na mesa/chão, damos o play real.
         modelViewer.addEventListener('ar-status', (event) => {
             if (event.detail.status === 'object-placed') {
-                // O áudio toca assim que o objeto é fixado no chão ou mesa
                 audio.play();
             }
         });
 
-        /* 
-           Nota: Alguns navegadores podem exigir que o áudio comece 
-           logo no clique do botão. Se o de cima não disparar no seu celular, 
-           use este evento alternativo abaixo:
-        */
+        // Alternativa para garantir o play caso o status acima demore
         modelViewer.addEventListener('ar-button-activated', () => {
-            audio.play();
+            // Pequeno delay para garantir que a transição de tela ocorreu
+            setTimeout(() => {
+                audio.play();
+            }, 1000);
         });
     </script>
 
