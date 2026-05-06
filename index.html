@@ -18,10 +18,12 @@
 
         <!-- O MASCOTE: Substitua a latitude e longitude pelos números do Google Maps -->
         <a-entity
-            gltf-model="url(./mascote.glb)"
+            gltf-model="url(./Waving.glb)"
             scale="5 5 5"
             look-at="[gps-camera]"
             gps-entity-place="latitude: -21.150417; longitude: -48.017346;"
+	    animation-mixer="clip: *;"> </a-entity>
+	    sound="src: url(./fala.mp3); autoplay: true; loop: true; distanceModel: exponential">
         ></a-entity>
 
         <a-camera gps-camera rotation-reader> </a-camera>
