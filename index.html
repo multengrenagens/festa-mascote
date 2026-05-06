@@ -3,20 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <title>Mascote em RA</title>
-    <!-- Script do model-viewer -->
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
     <style>
         body { margin: 0; background: #f0f0f0; overflow: hidden; }
         model-viewer { width: 100vw; height: 100vh; }
         
-        /* Botão para ativar a RA */
+        /* Botão RA Ajustado */
         .btn-ra {
-            position: absolute; bottom: 50px; left: 50%;
+            position: absolute; 
+            /* 'bottom' controla a altura: aumente este valor para subir mais o botão */
+            bottom: 150px; 
+            left: 50%;
             transform: translateX(-50%);
-            padding: 15px 25px; background: #007bff;
-            color: white; border: none; border-radius: 30px;
-            font-family: sans-serif; font-weight: bold;
-            cursor: pointer; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            
+            /* 'padding' e 'font-size' controlam o tamanho do botão */
+            padding: 20px 40px; 
+            font-size: 20px;
+            
+            background: #007bff;
+            color: white; 
+            border: none; 
+            border-radius: 40px;
+            font-family: sans-serif; 
+            font-weight: bold;
+            cursor: pointer; 
+            box-shadow: 0 6px 15px rgba(0,0,0,0.4);
+            white-space: nowrap; /* Impede que o texto quebre em duas linhas */
         }
     </style>
 </head>
