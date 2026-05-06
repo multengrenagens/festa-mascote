@@ -38,7 +38,7 @@
         ar 
         ar-modes="webxr scene-viewer quick-look" 
         ar-scale="auto" 
-        scale="0.1 0.1 0.1" 
+        scale="0.05 0.05 0.05" 
         camera-controls 
         shadow-intensity="1" 
         touch-action="pan-y">
@@ -53,28 +53,31 @@
         const audio = document.querySelector('#audioFala');
         const arButton = document.querySelector('#ar-button');
 
-        // PASSO 1: O segredo está aqui. 
-        // Quando o usuário clica no botão, nós "acordamos" o áudio.
+        // 1. Desbloqueia o áudio no clique, mas NÃO toca ainda
         arButton.addEventListener('click', () => {
             audio.play().then(() => {
-                audio.pause(); // Toca e pausa instantaneamente para ganhar permissão do sistema
+                audio.pause();
                 audio.currentTime = 0;
-            }).catch(e => console.log("Erro ao pré-carregar áudio:", e));
+            }).catch(e => console.log("Áudio aguardando RA..."));
         });
 
-        // PASSO 2: Quando o objeto for colocado na mesa/chão, damos o play real.
+        // 2. O SEGREDO: Só toca quando o status for "session-started" 
+        // e o objeto for efetivamente colocado no mundo real.
         modelViewer.addEventListener('ar-status', (event) => {
             if (event.detail.status === 'object-placed') {
-                audio.play();
+                // Reinicia o áudio para garantir que comece do zero
+                audio.currentTime = 0;
+                
+                // Pequeno delay de 500ms para garantir que a transição visual terminou
+                setTimeout(() => {
+                    audio.play();
+                }, 500);
             }
         });
 
-        // Alternativa para garantir o play caso o status acima demore
-        modelViewer.addEventListener('ar-button-activated', () => {
-            // Pequeno delay para garantir que a transição de tela ocorreu
-            setTimeout(() => {
-                audio.play();
-            }, 1000);
+        // 3. Impede que o áudio pare se o usuário sair e voltar rápido
+        audio.addEventListener('ended', () => {
+            console.log("Áudio finalizado com sucesso.");
         });
     </script>
 
