@@ -8,18 +8,13 @@
         body { margin: 0; background: #f0f0f0; overflow: hidden; }
         model-viewer { width: 100vw; height: 100vh; }
         
-        /* Botão RA Ajustado */
         .btn-ra {
             position: absolute; 
-            /* 'bottom' controla a altura: aumente este valor para subir mais o botão */
             bottom: 150px; 
             left: 50%;
             transform: translateX(-50%);
-            
-            /* 'padding' e 'font-size' controlam o tamanho do botão */
             padding: 20px 40px; 
             font-size: 20px;
-            
             background: #007bff;
             color: white; 
             border: none; 
@@ -28,11 +23,14 @@
             font-weight: bold;
             cursor: pointer; 
             box-shadow: 0 6px 15px rgba(0,0,0,0.4);
-            white-space: nowrap; /* Impede que o texto quebre em duas linhas */
+            white-space: nowrap;
         }
     </style>
 </head>
 <body>
+
+    <!-- Elemento de áudio escondido -->
+    <audio id="audioFala" src="fala.mp3"></audio>
 
     <model-viewer 
         id="mascote"
@@ -40,7 +38,7 @@
         ar 
         ar-modes="webxr scene-viewer quick-look" 
         ar-scale="auto" 
-        scale="0.2 0.2 0.2" 
+        scale="0.1 0.1 0.1" 
         camera-controls 
         shadow-intensity="1" 
         touch-action="pan-y">
@@ -49,6 +47,28 @@
             ✨ VER NO MEU ESPAÇO
         </button>
     </model-viewer>
+
+    <script>
+        const modelViewer = document.querySelector('#mascote');
+        const audio = document.querySelector('#audioFala');
+
+        // Detecta quando o usuário entra no modo Realidade Aumentada
+        modelViewer.addEventListener('ar-status', (event) => {
+            if (event.detail.status === 'object-placed') {
+                // O áudio toca assim que o objeto é fixado no chão ou mesa
+                audio.play();
+            }
+        });
+
+        /* 
+           Nota: Alguns navegadores podem exigir que o áudio comece 
+           logo no clique do botão. Se o de cima não disparar no seu celular, 
+           use este evento alternativo abaixo:
+        */
+        modelViewer.addEventListener('ar-button-activated', () => {
+            audio.play();
+        });
+    </script>
 
 </body>
 </html>
