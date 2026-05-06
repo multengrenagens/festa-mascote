@@ -1,32 +1,30 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Mascote em RA</title>
-    <!-- Este script é gratuito e faz a RA funcionar -->
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
-    <style>
-        body { margin: 0; background: #f0f0f0; }
-        model-viewer { width: 100vw; height: 100vh; }
-        .btn-ra {
-            position: absolute; bottom: 50px; left: 50%;
-            transform: translateX(-50%);
-            padding: 15px 25px; background: #007bff;
-            color: white; border: none; border-radius: 30px;
-            font-family: sans-serif; font-weight: bold;
-        }
-    </style>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Mascote GO - Mult Engrenagens</title>
+    <!-- Bibliotecas Gratuitas de Realidade Aumentada e GPS -->
+    <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
+    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
 </head>
-<body>
 
-    <model-viewer 
-        src="mascote.glb" 
-        ar ar-modes="webxr scene-viewer quick-look" 
-        camera-controls shadow-intensity="1" 
-        touch-action="pan-y">
-        <button slot="ar-button" class="btn-ra">
-            ✨ VER NO MEU ESPAÇO
-        </button>
-    </model-viewer>
+<body style="margin: 0; overflow: hidden;">
+    <a-scene
+        vr-mode-ui="enabled: false"
+        embedded
+        arjs="sourceType: webcam; debugUIEnabled: false;">
 
+        <!-- O MASCOTE: Substitua a latitude e longitude pelos números do Google Maps -->
+        <a-entity
+            gltf-model="url(./mascote.glb)"
+            scale="5 5 5"
+            look-at="[gps-camera]"
+            gps-entity-place="latitude: --21.15041665251009; longitude: -48.01734620455495;"
+        ></a-entity>
+
+        <a-camera gps-camera rotation-reader> </a-camera>
+    </a-scene>
 </body>
 </html>
