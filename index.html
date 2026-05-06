@@ -3,44 +3,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mascote RA</title>
+    <title>Mascote RA Final</title>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
     <style>
         body { margin: 0; background: #f0f0f0; font-family: sans-serif; overflow: hidden; }
-        model-viewer { width: 100vw; height: 100vh; }
+        model-viewer { width: 100vw; height: 100vh; --poster-color: transparent; }
         
-        /* Botão RA - Ajustado para máxima compatibilidade */
         .btn-ra {
-            position: absolute; 
-            bottom: 180px; 
-            left: 50%;
-            transform: translateX(-50%); 
-            padding: 25px 60px; 
-            font-size: 26px; 
-            background: #007bff; 
-            color: white; 
-            border: none; 
-            border-radius: 60px; 
-            font-weight: bold;
-            cursor: pointer; 
-            z-index: 999; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            position: absolute; bottom: 180px; left: 50%;
+            transform: translateX(-50%); padding: 25px 60px; 
+            font-size: 26px; background: #007bff; color: white; 
+            border: none; border-radius: 60px; font-weight: bold;
+            cursor: pointer; z-index: 999; box-shadow: 0 10px 25px rgba(0,0,0,0.4);
         }
 
         #btn-repetir {
-            position: absolute; 
-            bottom: 60px; 
-            left: 50%;
-            transform: translateX(-50%); 
-            padding: 20px 45px;
-            font-size: 20px;
-            background: #28a745; 
-            color: white; 
-            border: none;
-            border-radius: 40px; 
-            font-weight: bold; 
-            display: none;
-            z-index: 1000;
+            position: absolute; bottom: 60px; left: 50%;
+            transform: translateX(-50%); padding: 20px 45px;
+            font-size: 20px; background: #28a745; color: white; 
+            border: none; border-radius: 40px; font-weight: bold; 
+            display: none; z-index: 1000;
         }
     </style>
 </head>
@@ -52,19 +34,20 @@
         id="mascote"
         src="mascote.glb" 
         ar 
-        ar-modes="quick-look webxr scene-viewer" 
+        ar-modes="webxr quick-look scene-viewer" 
         camera-controls
-        /* Escala 50% maior que a anterior */
-        scale="0.12 0.12 0.12" 
+        /* Escala aumentada para visibilidade ideal */
+        scale="0.15 0.15 0.15" 
         
-        /* Ajustes fixos de sombra */
+        /* SOLUÇÃO DA SOMBRA: Aproxima o modelo do chão e intensifica o plano */
         shadow-intensity="2" 
         shadow-softness="0"
-        
-        /* Força a RA do iOS a aceitar o GLB se não houver USDZ */
+        ar-placement="floor"
+
+        /* SOLUÇÃO IOS: Ativa o modo que permite áudio e RA simultâneos */
         ios-src="mascote.glb"
+        quick-look-browsers="safari"
         
-        ar-scale="auto"
         loading="eager"
         reveal="auto">
         
@@ -81,42 +64,44 @@
         const modelViewer = document.querySelector('#mascote');
         const audio = document.querySelector('#audioFala');
         const btnRepetir = document.querySelector('#btn-repetir');
+        const btnRA = document.querySelector('.btn-ra');
 
-        // Função de áudio otimizada
-        function tocarAudio() {
-            audio.currentTime = 0;
-            audio.play().catch(() => console.log("Permissão de áudio pendente"));
-        }
+        let interacaoHumana = false;
 
-        // O segredo para o iOS: Detectar a transição de forma passiva
+        // Destrava o áudio para o sistema
+        btnRA.addEventListener('click', () => {
+            interacaoHumana = true;
+            audio.play().then(() => {
+                audio.pause();
+                audio.currentTime = 0;
+            }).catch(() => {});
+        });
+
+        // Gerenciamento de Estados
         modelViewer.addEventListener('ar-status', (event) => {
             if (event.detail.status === 'session-started') {
-                // No Android (WebXR) o botão de repetir aparece
                 btnRepetir.style.display = 'block';
                 
-                // No iOS, o áudio precisa de um "empurrão" 
-                // após o sistema carregar o ambiente
-                setTimeout(tocarAudio, 3000);
+                // No iOS, tentamos tocar o áudio com um delay maior
+                // para esperar o Quick Look estabilizar
+                if (interacaoHumana) {
+                    setTimeout(() => {
+                        audio.play();
+                    }, 4000); 
+                }
             }
             
-            if (event.detail.status === 'object-placed') {
-                // Garante que a sombra seja recalculada ao colocar na mesa
-                console.log("Mascote posicionado na mesa");
-            }
-
             if (event.detail.status === 'not-presenting') {
                 btnRepetir.style.display = 'none';
                 audio.pause();
+                audio.currentTime = 0;
             }
         });
 
-        // Evento de clique simplificado para não travar o lançamento da RA no iOS
-        document.querySelector('.btn-ra').addEventListener('click', () => {
-            // Apenas "destrava" o áudio sem processamento pesado
-            audio.play().then(() => { audio.pause(); }).catch(() => {});
+        btnRepetir.addEventListener('click', () => {
+            audio.currentTime = 0;
+            audio.play();
         });
-
-        btnRepetir.addEventListener('click', tocarAudio);
     </script>
 </body>
 </html>
