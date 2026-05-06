@@ -9,21 +9,38 @@
         body { margin: 0; background: #f0f0f0; font-family: sans-serif; }
         model-viewer { width: 100vw; height: 100vh; }
         
-        /* Botão RA bem grande e visível */
+        /* Botão RA maior para Android e iOS */
         .btn-ra {
-            position: absolute; bottom: 150px; left: 50%;
-            transform: translateX(-50%); padding: 20px 40px; 
-            font-size: 20px; background: #007bff; color: white; 
-            border: none; border-radius: 50px; font-weight: bold;
-            cursor: pointer; z-index: 999; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            position: absolute; 
+            bottom: 180px; /* Subiu um pouco mais */
+            left: 50%;
+            transform: translateX(-50%); 
+            padding: 25px 50px; /* Botão bem mais largo e alto */
+            font-size: 24px; /* Letra maior */
+            background: #007bff; 
+            color: white; 
+            border: none; 
+            border-radius: 60px; 
+            font-weight: bold;
+            cursor: pointer; 
+            z-index: 999; 
+            box-shadow: 0 8px 20px rgba(0,0,0,0.4);
+            white-space: nowrap;
         }
 
-        /* Botão de Repetir (Para Android/WebXR) */
         #btn-repetir {
-            position: absolute; bottom: 50px; left: 50%;
-            transform: translateX(-50%); padding: 15px 30px;
-            background: #28a745; color: white; border: none;
-            border-radius: 30px; font-weight: bold; display: none;
+            position: absolute; 
+            bottom: 60px; 
+            left: 50%;
+            transform: translateX(-50%); 
+            padding: 20px 40px;
+            font-size: 18px;
+            background: #28a745; 
+            color: white; 
+            border: none;
+            border-radius: 40px; 
+            font-weight: bold; 
+            display: none;
             z-index: 1000;
         }
     </style>
@@ -35,13 +52,15 @@
     <model-viewer 
         id="mascote"
         src="mascote.glb" 
+        /* ios-src é essencial para iPhone. Se não tiver um .usdz, o iPhone usa o .glb via Quick Look automático */
+        ios-src="mascote.glb" 
         ar 
-        ar-modes="webxr quick-look scene-viewer" 
-        scale="0.05 0.05 0.05" 
+        ar-modes="webxr scene-viewer quick-look" 
+        /* Aumentado em 20%: de 0.05 para 0.06 */
+        scale="0.06 0.06 0.06" 
         camera-controls 
         shadow-intensity="1"
-        /* O iOS precisa que o som seja ativado por uma interação */
-        ios-src="mascote.glb">
+        ar-scale="auto">
         
         <button slot="ar-button" id="ar-launch" class="btn-ra">
             ✨ VER NO MEU ESPAÇO
@@ -58,22 +77,22 @@
         const btnRepetir = document.querySelector('#btn-repetir');
         const arLaunch = document.querySelector('#ar-launch');
 
-        // FUNÇÃO PARA TOCAR O ÁUDIO
         function tocarAudio() {
             audio.currentTime = 0;
-            audio.play().catch(e => console.log("Erro ao tocar:", e));
+            audio.play().catch(e => console.log("Áudio aguardando interação..."));
         }
 
-        // NO CLIQUE DO BOTÃO (Para iOS e Android)
+        // Correção para o iPhone: O clique precisa disparar a intenção de áudio imediatamente
         arLaunch.addEventListener('click', () => {
-            // No iOS, precisamos disparar o áudio logo no clique ou ele será bloqueado
-            // Mas para não tocar "antes", vamos usar um delay curto
-            setTimeout(() => {
-                tocarAudio();
-            }, 2500); // 2.5s é o tempo médio que o iPhone leva para abrir a câmera de RA
+            // No iOS, se dispararmos o áudio muito tarde, ele bloqueia. 
+            // Vamos tocar um silêncio rápido para "abrir" o canal de áudio.
+            audio.play().then(() => {
+                audio.pause();
+                // O play real acontece com um pequeno delay para a transição da câmera
+                setTimeout(tocarAudio, 3000);
+            });
         });
 
-        // PARA ANDROID (WebXR)
         modelViewer.addEventListener('ar-status', (event) => {
             if (event.detail.status === 'session-started') {
                 btnRepetir.style.display = 'block';
