@@ -2,32 +2,29 @@
 <html lang="pt-br">
 <head>
     <meta charset="UTF-8">
-    <title>Mascote em RA</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mascote Confraternização</title>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; background: #f0f0f0; overflow: hidden; font-family: sans-serif; }
+        body { margin: 0; background: #f0f0f0; font-family: sans-serif; }
         model-viewer { width: 100vw; height: 100vh; }
         
-        /* Botão para entrar na RA */
+        /* Botão RA bem grande e visível */
         .btn-ra {
             position: absolute; bottom: 150px; left: 50%;
             transform: translateX(-50%); padding: 20px 40px; 
             font-size: 20px; background: #007bff; color: white; 
-            border: none; border-radius: 40px; font-weight: bold;
-            cursor: pointer; z-index: 100;
+            border: none; border-radius: 50px; font-weight: bold;
+            cursor: pointer; z-index: 999; box-shadow: 0 4px 15px rgba(0,0,0,0.3);
         }
 
-        /* Botão de Áudio que aparece DENTRO da RA */
-        #controles-ra {
+        /* Botão de Repetir (Para Android/WebXR) */
+        #btn-repetir {
             position: absolute; bottom: 50px; left: 50%;
-            transform: translateX(-50%); z-index: 200;
-            display: none; /* Escondido por padrão */
-        }
-
-        .btn-audio {
-            padding: 15px 30px; background: #28a745; color: white;
-            border: none; border-radius: 30px; font-weight: bold;
-            font-size: 18px; box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            transform: translateX(-50%); padding: 15px 30px;
+            background: #28a745; color: white; border: none;
+            border-radius: 30px; font-weight: bold; display: none;
+            z-index: 1000;
         }
     </style>
 </head>
@@ -35,61 +32,59 @@
 
     <audio id="audioFala" src="fala.mp3" preload="auto"></audio>
 
-    <!-- Forçamos o webxr primeiro para manter o controle do áudio -->
     <model-viewer 
         id="mascote"
         src="mascote.glb" 
         ar 
-        ar-modes="webxr scene-viewer" 
+        ar-modes="webxr quick-look scene-viewer" 
         scale="0.05 0.05 0.05" 
         camera-controls 
-        shadow-intensity="1">
+        shadow-intensity="1"
+        /* O iOS precisa que o som seja ativado por uma interação */
+        ios-src="mascote.glb">
         
-        <button slot="ar-button" class="btn-ra">
+        <button slot="ar-button" id="ar-launch" class="btn-ra">
             ✨ VER NO MEU ESPAÇO
         </button>
 
-        <!-- Interface de controle que o model-viewer permite mostrar na RA -->
-        <div id="controles-ra">
-            <button class="btn-audio" id="play-repetir">🔊 OUVIR MENSAGEM</button>
-        </div>
+        <button id="btn-repetir" type="button">
+            🔄 OUVIR NOVAMENTE
+        </button>
     </model-viewer>
 
     <script>
         const modelViewer = document.querySelector('#mascote');
         const audio = document.querySelector('#audioFala');
-        const painelControle = document.querySelector('#controles-ra');
-        const btnPlay = document.querySelector('#play-repetir');
+        const btnRepetir = document.querySelector('#btn-repetir');
+        const arLaunch = document.querySelector('#ar-launch');
 
-        // 1. Monitora a entrada na RA
+        // FUNÇÃO PARA TOCAR O ÁUDIO
+        function tocarAudio() {
+            audio.currentTime = 0;
+            audio.play().catch(e => console.log("Erro ao tocar:", e));
+        }
+
+        // NO CLIQUE DO BOTÃO (Para iOS e Android)
+        arLaunch.addEventListener('click', () => {
+            // No iOS, precisamos disparar o áudio logo no clique ou ele será bloqueado
+            // Mas para não tocar "antes", vamos usar um delay curto
+            setTimeout(() => {
+                tocarAudio();
+            }, 2500); // 2.5s é o tempo médio que o iPhone leva para abrir a câmera de RA
+        });
+
+        // PARA ANDROID (WebXR)
         modelViewer.addEventListener('ar-status', (event) => {
             if (event.detail.status === 'session-started') {
-                // Usuário entrou na RA: Mostra o botão de Play
-                painelControle.style.display = 'block';
-            } else if (event.detail.status === 'not-presenting') {
-                // Usuário saiu da RA: Esconde o botão e para o áudio
-                painelControle.style.display = 'none';
+                btnRepetir.style.display = 'block';
+            }
+            if (event.detail.status === 'not-presenting') {
+                btnRepetir.style.display = 'none';
                 audio.pause();
-                audio.currentTime = 0;
             }
         });
 
-        // 2. Ação do botão de Play/Repetir
-        btnPlay.addEventListener('click', () => {
-            audio.currentTime = 0;
-            audio.play();
-            btnPlay.innerText = "🔄 OUVIR NOVAMENTE";
-        });
-
-        // 3. Auto-play opcional quando o objeto for colocado (apenas se o navegador permitir)
-        modelViewer.addEventListener('ar-status', (event) => {
-            if (event.detail.status === 'object-placed') {
-                // Tentativa de play automático ao detectar a mesa
-                audio.play().catch(() => {
-                    console.log("Play automático bloqueado. Aguardando clique no botão.");
-                });
-            }
-        });
+        btnRepetir.addEventListener('click', tocarAudio);
     </script>
 </body>
 </html>
