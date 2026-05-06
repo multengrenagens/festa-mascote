@@ -9,21 +9,19 @@
         model-viewer { width: 100vw; height: 100vh; }
         
         .btn-ra {
-            position: absolute; 
-            bottom: 150px; 
-            left: 50%;
-            transform: translateX(-50%);
-            padding: 20px 40px; 
-            font-size: 20px;
-            background: #007bff;
-            color: white; 
-            border: none; 
-            border-radius: 40px;
-            font-family: sans-serif; 
-            font-weight: bold;
-            cursor: pointer; 
-            box-shadow: 0 6px 15px rgba(0,0,0,0.4);
-            z-index: 100;
+            position: absolute; bottom: 150px; left: 50%;
+            transform: translateX(-50%); padding: 20px 40px; 
+            font-size: 20px; background: #007bff; color: white; 
+            border: none; border-radius: 40px; font-weight: bold;
+            cursor: pointer; z-index: 100;
+        }
+
+        /* Botão de Repetir (Aparece em cima do mascote na RA) */
+        .btn-repetir {
+            background: #28a745; color: white; border: none;
+            border-radius: 10px; padding: 10px 15px;
+            font-weight: bold; cursor: pointer;
+            display: none; /* Escondido até o áudio acabar */
         }
     </style>
 </head>
@@ -31,29 +29,35 @@
 
     <audio id="audioFala" src="fala.mp3" preload="auto"></audio>
 
+    <!-- Usamos scale 0.05 para ser 50% menor que o anterior -->
     <model-viewer 
         id="mascote"
         src="mascote.glb" 
-        ar 
-        ar-modes="webxr scene-viewer quick-look" 
+        ar ar-modes="webxr scene-viewer quick-look" 
         ar-scale="auto" 
         scale="0.05 0.05 0.05" 
-        camera-controls 
-        shadow-intensity="1">
+        camera-controls shadow-intensity="1">
         
         <button slot="ar-button" id="ar-button" class="btn-ra">
             ✨ VER NO MEU ESPAÇO
+        </button>
+
+        <!-- Ponto de interação que segue o personagem na RA -->
+        <button slot="hotspot-repetir" id="hotspot-repetir" 
+            class="btn-repetir" 
+            data-position="0m 1m 0m" 
+            data-normal="0m 0m 1m">
+            🔄 Ouvir de novo
         </button>
     </model-viewer>
 
     <script>
         const modelViewer = document.querySelector('#mascote');
         const audio = document.querySelector('#audioFala');
+        const btnRepetir = document.querySelector('#hotspot-repetir');
         const arButton = document.querySelector('#ar-button');
 
-        let raAtiva = false;
-
-        // 1. O clique APENAS libera o áudio (destrava o navegador)
+        // 1. Destrava o áudio no clique mas força silêncio inicial
         arButton.addEventListener('click', () => {
             audio.play().then(() => {
                 audio.pause();
@@ -61,32 +65,40 @@
             }).catch(() => {});
         });
 
-        // 2. Monitora a mudança de estado para RA
+        // 2. Só toca quando o objeto for EFETIVAMENTE colocado na cena
         modelViewer.addEventListener('ar-status', (event) => {
-            // "session-started" significa que a câmera abriu
-            if (event.detail.status === 'session-started') {
-                raAtiva = true;
-            } 
-            
-            // "object-placed" significa que o boneco apareceu na mesa
-            if (event.detail.status === 'object-placed' && raAtiva) {
-                // Resetamos e tocamos com um atraso para garantir que a tela já mudou
-                audio.currentTime = 0;
+            if (event.detail.status === 'object-placed') {
+                // Esconde botão de repetir se estiver visível de uma vez anterior
+                btnRepetir.style.display = "none";
+                
+                // Pequeno delay para garantir que a interface de RA carregou
                 setTimeout(() => {
+                    audio.currentTime = 0;
                     audio.play();
-                    // Resetamos a trava para não tocar de novo se ele perder o rastreio e achar a mesa de novo
-                    raAtiva = false; 
-                }, 1200); // 1.2 segundos é o tempo médio de transição de tela
+                }, 1500); 
             }
+        });
 
-            // Se o usuário sair da RA, paramos o áudio
+        // 3. Quando o áudio terminar, mostra a opção de "Ouvir novamente"
+        audio.onended = () => {
+            // Mostra o botão flutuante em cima do boneco
+            btnRepetir.style.display = "block";
+        };
+
+        // 4. Função do botão de repetir dentro da RA
+        btnRepetir.addEventListener('click', () => {
+            btnRepetir.style.display = "none";
+            audio.currentTime = 0;
+            audio.play();
+        });
+
+        // Se sair da RA, limpa tudo
+        modelViewer.addEventListener('ar-status', (event) => {
             if (event.detail.status === 'not-presenting') {
                 audio.pause();
-                audio.currentTime = 0;
-                raAtiva = false;
+                btnRepetir.style.display = "none";
             }
         });
     </script>
-
 </body>
 </html>
