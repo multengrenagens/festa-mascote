@@ -1,132 +1,32 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Mascote da Confraternização</title>
+    <title>Mascote em RA</title>
+    <!-- Este script é gratuito e faz a RA funcionar -->
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; background: #f0f0f0; font-family: 'Segoe UI', Arial, sans-serif; }
+        body { margin: 0; background: #f0f0f0; }
         model-viewer { width: 100vw; height: 100vh; }
-
-        /* Balão de Fala Visual */
-        #balao-texto {
-            position: absolute;
-            bottom: 180px; /* Fica acima dos botões */
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80%;
-            max-width: 300px;
-            background: white;
-            border-radius: 15px;
-            padding: 15px;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.3);
-            display: none; /* Escondido por padrão */
-            text-align: center;
-            z-index: 10;
-            border: 2px solid #28a745;
-        }
-
-        /* Triângulo do balão */
-        #balao-texto::after {
-            content: '';
-            position: absolute;
-            bottom: -15px;
-            left: 50%;
-            margin-left: -15px;
-            border-width: 15px 15px 0;
-            border-style: solid;
-            border-color: white transparent transparent transparent;
-        }
-
         .btn-ra {
-            position: absolute; bottom: 110px; left: 50%;
+            position: absolute; bottom: 50px; left: 50%;
             transform: translateX(-50%);
-            padding: 12px 20px; background: #007bff;
+            padding: 15px 25px; background: #007bff;
             color: white; border: none; border-radius: 30px;
-            font-weight: bold; cursor: pointer;
-        }
-
-        .btn-falar {
-            position: absolute; bottom: 40px; left: 50%;
-            transform: translateX(-50%);
-            padding: 15px 30px; background: #28a745;
-            color: white; border: none; border-radius: 30px;
-            font-weight: bold; cursor: pointer;
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-            width: 250px;
-        }
-
-        .falando { background: #dc3545 !important; animation: pulse 1s infinite; }
-
-        @keyframes pulse {
-            0% { transform: translateX(-50%) scale(1); }
-            50% { transform: translateX(-50%) scale(1.05); }
-            100% { transform: translateX(-50%) scale(1); }
+            font-family: sans-serif; font-weight: bold;
         }
     </style>
 </head>
 <body>
 
-    <div id="balao-texto"></div>
-
     <model-viewer 
-        id="mascote"
         src="mascote.glb" 
         ar ar-modes="webxr scene-viewer quick-look" 
-        camera-controls 
-        shadow-intensity="1">
-        
-        <button slot="ar-button" class="btn-ra">✨ VER NO MEU ESPAÇO</button>
-        <button type="button" class="btn-falar" id="botaoVoz">🔊 FALAR COM O MASCOTE</button>
+        camera-controls shadow-intensity="1" 
+        touch-action="pan-y">
+        <button slot="ar-button" class="btn-ra">
+            ✨ VER NO MEU ESPAÇO
+        </button>
     </model-viewer>
 
-    <script>
-        const btnVoz = document.querySelector('#botaoVoz');
-        const balao = document.querySelector('#balao-texto');
-        let boasVindasFeito = false;
-
-        const frasesFesta = [
-            "Aproveitem o buffet, mas guardem um espaço para o doce!",
-            "Sorria para a foto! Este momento é todo nosso.",
-            "Trabalhar com essa equipe é o melhor presente de todos.",
-            "Um brinde ao nosso sucesso! Saúde, pessoal!",
-            "Não esqueçam de postar as fotos com a nossa hashtag!"
-        ];
-
-        function falar() {
-            if (window.speechSynthesis.speaking) return;
-
-            let texto = "";
-            if (!boasVindasFeito) {
-                texto = "E aí, time! Que festa incrível! Vamos comemorar tudo o que conquistamos juntos. A piscina está liberada para crianças e adultos. Nossa primeira atração começa à uma da tarde. Divirta-se e lembre-se: Se beber, não dirija.";
-                boasVindasFeito = true;
-            } else {
-                texto = frasesFesta[Math.floor(Math.random() * frasesFesta.length)];
-            }
-            
-            const utterance = new SpeechSynthesisUtterance(texto);
-            utterance.lang = 'pt-BR';
-
-            utterance.onstart = () => {
-                // Mostra o balão e muda o botão
-                balao.innerText = texto;
-                balao.style.display = "block";
-                btnVoz.classList.add('falando');
-                btnVoz.innerText = "⭐ OUVINDO...";
-            };
-
-            utterance.onend = () => {
-                // Esconde o balão após 2 segundos do fim da fala
-                setTimeout(() => {
-                    balao.style.display = "none";
-                    btnVoz.classList.remove('falando');
-                    btnVoz.innerText = "🔊 OUVIR MAIS";
-                }, 2000);
-            };
-
-            window.speechSynthesis.speak(utterance);
-        }
-
-        btnVoz.addEventListener('click', falar);
-    </script>
 </body>
 </html>
