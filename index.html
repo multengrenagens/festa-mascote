@@ -1,70 +1,58 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <title>Mascote Mult Engrenagens RA</title>
+    <title>Mascote Mult RA</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        model-viewer { width: 100%; height: 100%; }
-        
-        /* Overlay para permissão de áudio no iOS */
-        #camadaInteracao {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0, 0, 0, 0.6);
-            color: white; border: none; z-index: 1000;
-            display: flex; flex-direction: column; justify-content: center; align-items: center;
-            cursor: pointer;
+        body { margin: 0; padding: 0; width: 100vw; height: 100vh; overflow: hidden; background: #000; }
+        model-viewer { width: 100%; height: 100%; background-color: #eee; }
+        #ar-button {
+            position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+            padding: 15px 25px; background: #007bff; color: white; border: none;
+            border-radius: 30px; font-weight: bold; z-index: 10;
         }
-        .icone-audio { font-size: 50px; margin-bottom: 15px; }
-        .texto-instrucao { font-size: 18px; font-weight: bold; text-transform: uppercase; }
     </style>
 </head>
 <body>
 
-    <button id="camadaInteracao">
-        <div class="icone-audio">🔊</div>
-        <div class="texto-instrucao">Toque para ver o Mascote e ouvir</div>
-    </button>
+    <button id="ar-button">CLIQUE AQUI PARA VER NA MESA</button>
 
     <model-viewer 
-        id="mascote"
+        id="model"
         src="mascote.glb" 
         ios-src="mascote.usdz"
         ar 
         ar-modes="quick-look scene-viewer" 
-        camera-controls 
+        camera-controls
         ar-scale="fixed"
-        scale="0.1 0.1 0.1" 
+        scale="0.01 0.01 0.01" 
         shadow-intensity="1">
     </model-viewer>
 
     <script>
-        const modelViewer = document.querySelector("#mascote");
-        const botao = document.querySelector("#camadaInteracao");
+        const modelViewer = document.querySelector("#model");
+        const button = document.querySelector("#ar-button");
         const audio = new Audio("fala.mp3");
+        audio.load();
 
-        // 1. O clique do usuário "destrava" o sistema de áudio do iOS
-        botao.addEventListener("click", () => {
+        button.addEventListener("click", () => {
+            // "Acorda" o áudio para o iOS
             audio.play().then(() => {
                 audio.pause();
                 audio.currentTime = 0;
-            }).catch(e => console.log("Erro ao pré-carregar áudio:", e));
-
-            botao.style.display = "none";
-
-            // Tenta forçar a entrada na RA imediatamente após o toque
-            setTimeout(() => {
-                modelViewer.activateAR();
-            }, 200);
+            });
+            
+            // Força a entrada na RA
+            modelViewer.activateAR();
         });
 
-        // 2. Tocar a fala assim que o mascote estiver posicionado no mundo real
+        // Tenta tocar quando o objeto é colocado
         modelViewer.addEventListener("ar-status", (event) => {
             if (event.detail.status === "object-placed") {
-                // No iOS Quick Look, o áudio às vezes precisa ser reiniciado aqui
-                audio.play().catch(err => console.log("Aguardando interação para tocar som"));
+                audio.play();
+                button.style.display = "none";
             }
         });
     </script>
