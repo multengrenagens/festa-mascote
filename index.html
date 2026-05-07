@@ -1,32 +1,42 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Mascote em RA</title>
-    <!-- Este script é gratuito e faz a RA funcionar -->
-    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
-    <style>
-        body { margin: 0; background: #f0f0f0; }
-        model-viewer { width: 100vw; height: 100vh; }
-        .btn-ra {
-            position: absolute; bottom: 50px; left: 50%;
-            transform: translateX(-50%);
-            padding: 15px 25px; background: #007bff;
-            color: white; border: none; border-radius: 30px;
-            font-family: sans-serif; font-weight: bold;
-        }
-    </style>
+    <title>Mascote RA - Vídeo</title>
+    <!-- Bibliotecas de RA que permitem usar vídeo em vez de 3D -->
+    <script src="https://aframe.io/releases/1.2.0/aframe.min.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
 </head>
-<body>
 
-    <model-viewer 
-        src="mascote.glb" 
-        ar ar-modes="webxr scene-viewer quick-look" 
-        camera-controls shadow-intensity="1" 
-        touch-action="pan-y">
-        <button slot="ar-button" class="btn-ra">
-            ✨ VER NO MEU ESPAÇO
-        </button>
-    </model-viewer>
+<body style="margin: 0; overflow: hidden;">
 
+    <!-- Instrução para o usuário -->
+    <div style="position: fixed; top: 10px; width: 100%; text-align: center; z-index: 1; color: white; font-family: sans-serif;">
+        Aponte a câmera para o marcador e toque na tela para o som sair
+    </div>
+
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false;">
+        
+        <a-assets>
+            <!-- Seu vídeo MP4 aqui -->
+            <video id="v" src="mascote_video.mp4" preload="auto" loop="true" playsinline webkit-playsinline></video>
+        </a-assets>
+
+        <!-- Marcador "Hiro" (Padrão do AR.js) -->
+        <!-- Você pode baixar essa imagem no Google pesquisando 'AR.js Hiro Marker' -->
+        <a-marker preset="hiro">
+            <!-- O vídeo aparece como um plano aqui -->
+            <a-video src="#v" width="1.6" height="1.6" rotation="-90 0 0"></a-video>
+        </a-marker>
+
+        <a-entity camera></a-entity>
+    </a-scene>
+
+    <script>
+        // No iOS o som só toca após um toque na tela
+        window.addEventListener('click', function () {
+            var v = document.querySelector('#v');
+            v.play();
+        });
+    </script>
 </body>
 </html>
