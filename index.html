@@ -1,114 +1,32 @@
 <!DOCTYPE html>
-<html lang="pt-br">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mascote RA Final</title>
+    <title>Mascote em RA</title>
+    <!-- Este script é gratuito e faz a RA funcionar -->
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; background: #f0f0f0; font-family: sans-serif; }
+        body { margin: 0; background: #f0f0f0; }
         model-viewer { width: 100vw; height: 100vh; }
-        
         .btn-ra {
-            position: absolute; bottom: 120px; left: 50%;
-            transform: translateX(-50%); padding: 22px 50px; 
-            font-size: 22px; background: #007bff; color: white; 
-            border: none; border-radius: 50px; font-weight: bold;
-            z-index: 100; box-shadow: 0 10px 20px rgba(0,0,0,0.3);
-        }
-
-        #btn-repetir {
-            position: absolute; bottom: 40px; left: 50%;
-            transform: translateX(-50%); padding: 15px 30px;
-            background: #28a745; color: white; border: none;
-            border-radius: 30px; font-weight: bold;
-            display: none; z-index: 101;
+            position: absolute; bottom: 50px; left: 50%;
+            transform: translateX(-50%);
+            padding: 15px 25px; background: #007bff;
+            color: white; border: none; border-radius: 30px;
+            font-family: sans-serif; font-weight: bold;
         }
     </style>
 </head>
 <body>
 
-    <audio id="audioFala" src="fala.mp3" preload="auto"></audio>
-
     <model-viewer 
-        id="viewer"
         src="mascote.glb" 
-        ar 
-        ar-modes="webxr quick-look scene-viewer" 
-        camera-controls
-        scale="0.15 0.15 0.15" 
-        shadow-intensity="2"
-        shadow-softness="0"
-        ar-placement="floor">
-        
-        <button slot="ar-button" id="ar-button" class="btn-ra">
+        ar ar-modes="webxr scene-viewer quick-look" 
+        camera-controls shadow-intensity="1" 
+        touch-action="pan-y">
+        <button slot="ar-button" class="btn-ra">
             ✨ VER NO MEU ESPAÇO
-        </button>
-
-        <button id="btn-repetir">
-            🔄 OUVIR NOVAMENTE
         </button>
     </model-viewer>
 
-    <script>
-        const viewer = document.querySelector('#viewer');
-        const audio = document.querySelector('#audioFala');
-        const btnRepetir = document.querySelector('#btn-repetir');
-        const arButton = document.querySelector('#ar-button');
-        
-        let intervalFala = null;
-        const file1 = "mascote.glb";
-        const file2 = "mascote2.glb";
-
-        function alternarBoca() {
-            if (intervalFala) return;
-            intervalFala = setInterval(() => {
-                viewer.src = viewer.src.includes(file1) ? file2 : file1;
-            }, 180);
-        }
-
-        function pararAnimacao() {
-            clearInterval(intervalFala);
-            intervalFala = null;
-            viewer.src = file1;
-        }
-
-        // --- SOLUÇÃO PARA IOS ---
-        // O áudio e a animação começam no clique, com um delay para o iPhone carregar
-        arButton.addEventListener('click', () => {
-            setTimeout(() => {
-                audio.play();
-                alternarBoca();
-            }, 3000); // 3 segundos é o tempo de abertura do Quick Look
-        });
-
-        // --- SOLUÇÃO PARA ANDROID ---
-        viewer.addEventListener('ar-status', (event) => {
-            if (event.detail.status === 'session-started') {
-                btnRepetir.style.display = 'block';
-                // No Android, o áudio toca novamente ao entrar se já não estiver tocando
-                if (audio.paused) {
-                    audio.play();
-                    alternarBoca();
-                }
-            }
-            if (event.detail.status === 'not-presenting') {
-                btnRepetir.style.display = 'none';
-                audio.pause();
-                pararAnimacao();
-            }
-        });
-
-        // Botão Ouvir Novamente (Funciona no Android)
-        btnRepetir.addEventListener('click', () => {
-            audio.currentTime = 0;
-            audio.play();
-            alternarBoca();
-        });
-
-        audio.onended = () => {
-            pararAnimacao();
-        };
-    </script>
 </body>
 </html>
