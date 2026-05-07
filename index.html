@@ -3,71 +3,96 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mascote Animado</title>
+    <title>Mascote Falante RA</title>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; background: #eee; font-family: sans-serif; }
+        body { margin: 0; background: #f0f0f0; font-family: sans-serif; }
         model-viewer { width: 100vw; height: 100vh; }
         
         .btn-ra {
             position: absolute; bottom: 100px; left: 50%;
             transform: translateX(-50%); padding: 20px 40px; 
-            font-size: 20px; background: #007bff; color: white; 
+            font-size: 22px; background: #007bff; color: white; 
             border: none; border-radius: 50px; font-weight: bold;
-            z-index: 10;
+            z-index: 10; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
-        
-        #btn-som {
-            position: absolute; bottom: 30px; left: 50%;
-            transform: translateX(-50%); padding: 15px 30px;
+
+        #btn-falar {
+            position: absolute; bottom: 40px; left: 50%;
+            transform: translateX(-50%); padding: 15px 35px;
             background: #28a745; color: white; border: none;
-            border-radius: 30px; font-weight: bold; display: none;
-            z-index: 20;
+            border-radius: 35px; font-weight: bold; font-size: 18px;
+            display: none; z-index: 20; box-shadow: 0 5px 15px rgba(0,0,0,0.3);
         }
     </style>
 </head>
 <body>
 
-    <audio id="audioFala" src="fala.mp3"></audio>
+    <audio id="audioFala" src="fala.mp3" preload="auto"></audio>
 
     <model-viewer 
-        id="mascote"
+        id="mascote-viewer"
         src="mascote.glb" 
         ar 
-        ar-modes="scene-viewer quick-look webxr" 
+        ar-modes="webxr quick-look scene-viewer" 
         camera-controls
-        /* Escala grande e sombra fixa */
-        scale="0.2 0.2 0.2" 
+        scale="0.15 0.15 0.15" 
         shadow-intensity="2"
         shadow-softness="0"
-        /* Ativa a animação da boca (se existir no arquivo) */
-        autoplay
-        animation-name="*">
+        ar-placement="floor">
         
-        <button slot="ar-button" class="btn-ra">✨ ABRIR CÂMERA (RA)</button>
-        <button id="btn-som">🔊 OUVIR MENSAGEM</button>
+        <button slot="ar-button" class="btn-ra">✨ VER NO MEU ESPAÇO</button>
+        <button id="btn-falar">🔊 OUVIR MENSAGEM</button>
     </model-viewer>
 
     <script>
-        const modelViewer = document.querySelector('#mascote');
+        const viewer = document.querySelector('#mascote-viewer');
         const audio = document.querySelector('#audioFala');
-        const btnSom = document.querySelector('#btn-som');
+        const btnFalar = document.querySelector('#btn-falar');
+        
+        let intervalFala = null;
+        const file1 = "mascote.glb";
+        const file2 = "mascote2.glb";
 
-        modelViewer.addEventListener('ar-status', (event) => {
+        // 1. Gerencia entrada/saída da RA
+        viewer.addEventListener('ar-status', (event) => {
             if (event.detail.status === 'session-started') {
-                btnSom.style.display = 'block';
+                btnFalar.style.display = 'block';
             }
             if (event.detail.status === 'not-presenting') {
-                btnSom.style.display = 'none';
-                audio.pause();
+                pararAnimacao();
+                btnFalar.style.display = 'none';
             }
         });
 
-        btnSom.addEventListener('click', () => {
+        // 2. Lógica da "Fala" (Alternar arquivos)
+        function iniciarAnimacao() {
+            pararAnimacao(); // Limpa se já estiver rodando
+            
+            intervalFala = setInterval(() => {
+                // Alterna o SRC do model-viewer entre o arquivo 1 e 2
+                viewer.src = viewer.src.includes(file1) ? file2 : file1;
+            }, 150; // Velocidade da batida da boca (150ms)
+        }
+
+        function pararAnimacao() {
+            clearInterval(intervalFala);
+            viewer.src = file1; // Volta para a boca fechada
+            audio.pause();
+        }
+
+        // 3. Gatilho do botão
+        btnFalar.addEventListener('click', () => {
             audio.currentTime = 0;
             audio.play();
-            // Se o modelo tiver animação, resetamos ela junto com o som
-            modelViewer.play();
+            btnFalar.innerText = "🔄 OUVIR NOVAMENTE";
+            
+            iniciarAnimacao();
+            
+            // Quando o áudio acabar, para de mexer a boca
+            audio.onended = () => {
+                pararAnimacao();
+            };
         });
     </script>
 </body>
