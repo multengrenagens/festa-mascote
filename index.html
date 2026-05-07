@@ -4,45 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mascote Confraternização</title>
-    <!-- Script atualizado para a versão mais estável -->
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.5.0/model-viewer.min.js"></script>
     <style>
         body { margin: 0; background: #f0f0f0; font-family: sans-serif; overflow: hidden; }
         model-viewer { width: 100vw; height: 100vh; }
         
-        /* Botão RA - Otimizado para dedão (clique fácil) */
+        /* Botão Principal */
         .btn-ra {
-            position: absolute; 
-            bottom: 180px; 
-            left: 50%;
-            transform: translateX(-50%); 
-            padding: 25px 60px; 
-            font-size: 26px; 
-            background: #007bff; 
-            color: white; 
-            border: none; 
-            border-radius: 60px; 
-            font-weight: bold;
-            cursor: pointer; 
-            z-index: 999; 
-            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-            display: block !important; /* Garante visibilidade */
+            position: absolute; bottom: 100px; left: 50%;
+            transform: translateX(-50%); padding: 20px 40px; 
+            font-size: 22px; background: #007bff; color: white; 
+            border: none; border-radius: 50px; font-weight: bold;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3); z-index: 10;
         }
 
-        #btn-repetir {
-            position: absolute; 
-            bottom: 60px; 
-            left: 50%;
-            transform: translateX(-50%); 
-            padding: 20px 45px;
-            font-size: 20px;
-            background: #28a745; 
-            color: white; 
-            border: none;
-            border-radius: 40px; 
-            font-weight: bold; 
-            display: none;
-            z-index: 1000;
+        /* Botão de Áudio (Aparece após entrar na RA) */
+        #btn-play {
+            position: absolute; bottom: 30px; left: 50%;
+            transform: translateX(-50%); padding: 15px 30px;
+            background: #28a745; color: white; border: none;
+            border-radius: 30px; font-weight: bold; display: none;
+            z-index: 20;
         }
     </style>
 </head>
@@ -50,74 +32,57 @@
 
     <audio id="audioFala" src="fala.mp3" preload="auto"></audio>
 
-    <!-- 
-      IMPORTANTE PARA IOS: 
-      - quick-look-browsers="safari" força a abertura no visualizador nativo.
-      - ar-modes prioriza quick-look para o iPhone.
-    -->
     <model-viewer 
         id="mascote"
         src="mascote.glb" 
-        ios-src="mascote.glb"
         ar 
-        ar-modes="quick-look webxr scene-viewer" 
-        ar-placement="floor"
-        camera-controls
-        
-        /* Escala 50% maior que a anterior (0.15) */
-        scale="0.15 0.15 0.15" 
-        
-        /* Sombra Reforçada para Android */
-        shadow-intensity="2" 
+        ar-modes="webxr scene-viewer quick-look" 
+        ar-scale="fixed"
+        scale="0.2 0.2 0.2" 
+        camera-controls 
+        shadow-intensity="1.5"
         shadow-softness="0"
-        
-        loading="eager"
-        quick-look-browsers="safari">
+        ar-placement="floor">
         
         <button slot="ar-button" class="btn-ra">
-            ✨ VER NO MEU ESPAÇO
+            ✨ VER MENSAGEM
         </button>
 
-        <button id="btn-repetir" type="button">
-            🔄 OUVIR NOVAMENTE
+        <button id="btn-play">
+            🔊 OUVIR FALA
         </button>
     </model-viewer>
 
     <script>
         const modelViewer = document.querySelector('#mascote');
         const audio = document.querySelector('#audioFala');
-        const btnRepetir = document.querySelector('#btn-repetir');
+        const btnPlay = document.querySelector('#btn-play');
 
-        function tocarAudio() {
-            audio.currentTime = 0;
-            audio.play().catch(e => console.log("Aguardando interação"));
-        }
-
-        // Evento de clique simplificado ao máximo para não travar o iOS
-        document.querySelector('.btn-ra').addEventListener('click', () => {
-            // "Pré-ativa" o áudio
-            audio.play().then(() => {
-                audio.pause();
-                audio.currentTime = 0;
-            }).catch(() => {});
-        });
-
+        // Gerencia a entrada na RA
         modelViewer.addEventListener('ar-status', (event) => {
-            // No momento que a sessão de RA estabiliza
             if (event.detail.status === 'session-started') {
-                btnRepetir.style.display = 'block';
+                // Mostra o botão de som quando a câmera abre
+                btnPlay.style.display = 'block';
                 
-                // O delay de 4 segundos é vital para o iPhone
-                setTimeout(tocarAudio, 4000);
+                // Tenta o autoplay (funciona no Android)
+                setTimeout(() => {
+                    audio.play().catch(() => {
+                        console.log("iOS barrou o som automático. Aguardando clique.");
+                    });
+                }, 1000);
             }
-            
             if (event.detail.status === 'not-presenting') {
-                btnRepetir.style.display = 'none';
+                btnPlay.style.display = 'none';
                 audio.pause();
             }
         });
 
-        btnRepetir.addEventListener('click', tocarAudio);
+        // Clique manual para garantir o som no iPhone
+        btnPlay.addEventListener('click', () => {
+            audio.currentTime = 0;
+            audio.play();
+            btnPlay.innerText = "🔄 OUVIR NOVAMENTE";
+        });
     </script>
 </body>
 </html>
