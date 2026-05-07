@@ -1,31 +1,72 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta charset="utf-8" />
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <title>Mascote GO - Mult Engrenagens</title>
-    <!-- Bibliotecas Gratuitas de Realidade Aumentada e GPS -->
+    <meta charset="utf-8">
+    <title>Mascote Mult Engrenagens RA</title>
     <script src="https://aframe.io/releases/1.3.0/aframe.min.js"></script>
-    <script src="https://unpkg.com/aframe-look-at-component@0.8.0/dist/aframe-look-at-component.min.js"></script>
-    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar-nft.js"></script>
+    <script src="https://raw.githack.com/AR-js-org/AR.js/master/aframe/build/aframe-ar.js"></script>
+    <script src="https://cdn.jsdelivr.net/gh/donmccurdy/aframe-extras@v6.1.1/dist/aframe-extras.min.js"></script>
+    <style>
+        .arjs-loader { height: 100%; width: 100%; position: absolute; top: 0; left: 0; background-color: rgba(0, 0, 0, 0.8); z-index: 9999; display: flex; justify-content: center; align-items: center; color: white; font-family: sans-serif; }
+        #playButton { position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%); padding: 15px 30px; background: #007bff; color: white; border: none; border-radius: 50px; font-size: 18px; font-weight: bold; z-index: 999; cursor: pointer; display: none; }
+    </style>
 </head>
 
-<body style="margin: 0; overflow: hidden;">
-    <a-scene
-        vr-mode-ui="enabled: false"
-        embedded
-        arjs="sourceType: webcam; debugUIEnabled: false;">
+<body style="margin: 0px; overflow: hidden;">
+    <div id="loader" class="arjs-loader">Carregando Experiência...</div>
+    
+    <button id="playButton">INICIAR EXPERIÊNCIA</button>
 
-        <!-- O MASCOTE: Substitua a latitude e longitude pelos números do Google Maps -->
-        <a-entity
-            gltf-model="url(./mascote.glb)"
-            scale="5 5 5"
-            look-at="[gps-camera]"
-            gps-entity-place="latitude: -21.150450973873866; longitude: -48.01736493302248;"
-	    sound="src: url(./fala.mp3); autoplay: true; loop: true; distanceModel: exponential">
-        ></a-entity>
+    <a-scene embedded arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;">
+        
+        <a-assets>
+            <audio id="audioFala" src="fala.mp3" preload="auto"></audio>
+        </a-assets>
 
-        <a-camera gps-camera rotation-reader> </a-camera>
+        <a-marker preset="hiro" id="marker">
+            <a-entity
+                id="mascote"
+                gltf-model="url(./mascote.glb)"
+                scale="1 1 1"
+                position="0 0 0"
+                rotation="-90 0 0"
+                animation-mixer="clip: *;">
+            </a-entity>
+        </a-marker>
+
+        <a-entity camera></a-entity>
     </a-scene>
+
+    <script>
+        const playButton = document.querySelector('#playButton');
+        const audio = document.querySelector('#audioFala');
+        const loader = document.querySelector('#loader');
+        const marker = document.querySelector('#marker');
+
+        // Remove o loader quando a cena carregar
+        document.querySelector('a-scene').addEventListener('loaded', function () {
+            loader.style.display = 'none';
+            playButton.style.display = 'block';
+        });
+
+        // Ativa o áudio após o primeiro clique (Exigência do iOS)
+        playButton.addEventListener('click', function () {
+            audio.play(); // Toca uma vez silenciosamente para "desbloquear"
+            audio.pause();
+            playButton.style.display = 'none';
+            console.log("Áudio desbloqueado para iOS");
+        });
+
+        // Lógica: Toca o áudio apenas quando o QR Code (Marcador) aparece
+        marker.addEventListener('markerFound', function () {
+            audio.currentTime = 0;
+            audio.play();
+        });
+
+        // Para o áudio se o usuário parar de apontar para o marcador
+        marker.addEventListener('markerLost', function () {
+            audio.pause();
+        });
+    </script>
 </body>
 </html>
