@@ -4,14 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Confra Mult Engrenagens 15 Anos</title>
-    <!-- Importa o componente Model Viewer -->
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     
     <style>
         body { margin: 0; font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; overflow: hidden; }
         model-viewer { width: 100vw; height: 100vh; background-color: #f0f0f0; }
 
-        /* Estilo do Texto Máquina de Escrever */
+        /* Container para Android */
         #typing-container {
             position: absolute;
             bottom: 10%;
@@ -24,9 +23,10 @@
             border-radius: 15px;
             font-size: 1.1rem;
             line-height: 1.4;
-            pointer-events: none; /* Não atrapalha o toque na RA */
-            display: none; /* Escondido até a RA iniciar */
-            border-left: 5px solid #FFD700; /* Cor de destaque para os 15 anos */
+            pointer-events: none;
+            display: none;
+            border-left: 5px solid #FFD700;
+            z-index: 100;
         }
 
         #cursor {
@@ -44,7 +44,7 @@
         }
 
         #ar-button {
-            background-color: #004a8d; /* Tom de azul industrial */
+            background-color: #004a8d;
             color: white;
             border-radius: 8px;
             border: none;
@@ -56,13 +56,20 @@
             font-weight: bold;
             font-size: 18px;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+            z-index: 10;
         }
     </style>
 </head>
 <body>
 
+    <!-- 
+        Adicionado ios-src para o arquivo USDZ.
+        O segredo para o iPhone está no link dentro do ar-modes.
+    -->
     <model-viewer 
+        id="model-viewer"
         src="mascote.glb" 
+        ios-src="mascote.usdz"
         ar 
         ar-modes="webxr scene-viewer quick-look" 
         camera-controls 
@@ -86,27 +93,40 @@
         
         const fullText = "Seja bem-vindo à Confra de 15 anos da Mult.\nEsperamos que você aproveite bastante.\nA piscina está liberada para crianças e adultos.\nNossa primeira atração começa às 13 horas.\nDivirta-se e lembre-se: Se beber, não dirija.";
 
+        // Configuração específica para forçar texto no Quick Look (iOS)
+        // O '#' no final da URL do USDZ envia instruções para o sistema da Apple
+        const iosTitle = encodeURIComponent("Confra Mult 15 Anos");
+        const iosMessage = encodeURIComponent("Piscina Liberada | Atração 13h | Se beber não dirija");
+        
+        // Aplica o banner nativo do iOS com a mensagem
+        modelViewer.setAttribute('ios-src', `mascote.usdz#applePayButtonType=plain&checkoutTitle=${iosTitle}&checkoutSubtitle=${iosMessage}`);
+
         let index = 0;
 
         function typeWriter() {
             if (index < fullText.length) {
-                // Converte \n em quebras de linha reais no HTML
                 if (fullText.charAt(index) === "\n") {
                     textElement.innerHTML += "<br>";
                 } else {
                     textElement.innerHTML += fullText.charAt(index);
                 }
                 index++;
-                setTimeout(typeWriter, 50); // Velocidade da digitação
+                setTimeout(typeWriter, 50);
             }
         }
 
-        // Detecta quando o usuário entra no modo Realidade Aumentada
+        // Lógica Android (WebXR)
         modelViewer.addEventListener('ar-status', (event) => {
             if (event.detail.status === 'session-started') {
                 typingContainer.style.display = 'block';
-                setTimeout(typeWriter, 1500); // Pequeno atraso para o usuário se situar
+                setTimeout(typeWriter, 1500);
             }
+        });
+
+        // Caso o objeto esteja gigante no iOS, o USDZ precisa ser editado internamente.
+        // Mas o comando abaixo ajuda a suavizar a transição:
+        modelViewer.addEventListener('quick-look-button-tapped', () => {
+            console.log("Usuário abriu no iPhone");
         });
     </script>
 </body>
