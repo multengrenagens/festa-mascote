@@ -1,113 +1,141 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Confra Mult Engrenagens</title>
-    <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
-    <style>
-        body { margin: 0; font-family: sans-serif; overflow: hidden; }
-        model-viewer { width: 100vw; height: 100vh; background-color: #f0f0f0; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-        /* Container para Android */
-        #typing-container {
-            position: absolute;
-            bottom: 10%;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 80%;
-            background: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 20px;
-            border-radius: 15px;
-            font-size: 1.1rem;
-            display: none; /* Ativado via JS no Android */
-            border-left: 5px solid #FFD700;
-            z-index: 100;
-        }
+<title>Confra Mult Engrenagens</title>
 
-        #ar-button {
-            background-color: #004a8d;
-            color: white;
-            border-radius: 30px;
-            border: none;
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            padding: 15px 35px;
-            font-weight: bold;
-            font-size: 18px;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.4);
-        }
-    </style>
+<script type="module"
+src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js">
+</script>
+
+<style>
+body{
+    margin:0;
+    overflow:hidden;
+    font-family:sans-serif;
+}
+
+model-viewer{
+    width:100vw;
+    height:100vh;
+    background:#f0f0f0;
+}
+
+#typing-container{
+    position:absolute;
+    bottom:10%;
+    left:50%;
+    transform:translateX(-50%);
+    width:80%;
+    background:rgba(0,0,0,0.8);
+    color:white;
+    padding:20px;
+    border-radius:15px;
+    font-size:1rem;
+    display:none;
+    z-index:100;
+}
+
+#ar-button{
+    background:#004a8d;
+    color:white;
+    border:none;
+    border-radius:30px;
+    padding:15px 35px;
+    font-size:18px;
+    font-weight:bold;
+}
+</style>
 </head>
+
 <body>
 
-    <model-viewer 
-        id="viewer"
-        src="mascote.glb" 
-        ios-src="mascote.usdz"
-        ar 
-        ar-modes="webxr scene-viewer quick-look" 
-        camera-controls 
-        shadow-intensity="1" 
-        autoplay
-        alt="Mascote Mult Engrenagens">
-        
-        <button slot="ar-button" id="ar-button">
-            👋 TOQUE PARA INICIAR INTERAÇÃO
-        </button>
+<model-viewer
+    id="viewer"
+    src="mascote.glb"
+    ios-src="mascote.usdz"
+    ar
+    ar-modes="scene-viewer quick-look webxr"
+    camera-controls
+    autoplay
+    shadow-intensity="1"
+    scale="0.1 0.1 0.1"
+    alt="Mascote Mult Engrenagens">
 
-        <div id="typing-container">
-            <span id="text"></span>
-        </div>
-    </model-viewer>
+    <button slot="ar-button" id="ar-button">
+        👋 TOQUE PARA INICIAR
+    </button>
 
-    <script>
-        const modelViewer = document.querySelector('#viewer');
-        const typingContainer = document.getElementById('typing-container');
-        const textElement = document.getElementById('text');
-        
-        const fullText = "Seja bem-vindo à Confra de 15 anos da Mult.\nEsperamos que aproveite bastante.\nA piscina está liberada para crianças e adultos.\nNossa primeira atração começa às 13 horas.\nDivirta-se e lembre-se: Se beber, não dirija.";
+</model-viewer>
 
-        // --- LÓGICA PARA IPHONE (iOS) ---
-        // Criamos um link de "Banner" que o iOS entende como uma legenda fixa na RA
-        const bannerTitle = "Confra 15 Anos Mult";
-        const bannerSubtitle = "Piscina Liberada | Atração 13h | Não Dirija";
-        
-        // Esta URL mágica força o iPhone a exibir um banner com o seu texto
-        const iosParams = `#allowsContentPausing=0&applePayButtonType=plain&checkoutTitle=${encodeURIComponent(bannerTitle)}&checkoutSubtitle=${encodeURIComponent(bannerSubtitle)}`;
-        modelViewer.setAttribute('ios-src', `mascote.usdz${iosParams}`);
+<div id="typing-container">
+    <span id="text"></span>
+</div>
 
-        // --- LÓGICA PARA ANDROID (EFEITO MÁQUINA DE ESCREVER) ---
-        let index = 0;
-        function typeWriter() {
-            if (index < fullText.length) {
-                textElement.innerHTML += fullText.charAt(index) === "\n" ? "<br>" : fullText.charAt(index);
-                index++;
-                setTimeout(typeWriter, 40);
-            }
+<script>
+
+const modelViewer = document.querySelector("#viewer");
+
+const typingContainer = document.getElementById("typing-container");
+
+const textElement = document.getElementById("text");
+
+const isIOS = /iPhone|iPad|iPod/.test(navigator.userAgent);
+
+const fullText =
+`Seja bem-vindo à Confra de 15 anos da Mult.
+Esperamos que aproveite bastante.
+A piscina está liberada para crianças e adultos.
+Nossa primeira atração começa às 13 horas.
+Divirta-se e lembre-se:
+Se beber, não dirija.`;
+
+let index = 0;
+
+function typeWriter(){
+
+    if(index < fullText.length){
+
+        const char = fullText.charAt(index);
+
+        textElement.innerHTML +=
+            char === "\n" ? "<br>" : char;
+
+        index++;
+
+        setTimeout(typeWriter,40);
+    }
+}
+
+modelViewer.addEventListener("ar-status",(event)=>{
+
+    if(event.detail.status === "session-started"){
+
+        // Android/WebXR
+        if(!isIOS){
+
+            typingContainer.style.display = "block";
+
+            textElement.innerHTML = "";
+
+            index = 0;
+
+            setTimeout(typeWriter,1000);
         }
 
-        modelViewer.addEventListener('ar-status', (event) => {
-            if (event.detail.status === 'session-started') {
-                // Se NÃO for iPhone, exibe o efeito de máquina de escrever
-                if (!/iPhone|iPad|iPod/.test(navigator.userAgent)) {
-                    typingContainer.style.display = 'block';
-                    setTimeout(typeWriter, 1000);
-                }
-            }
-        });
+        // iPhone
+        else{
 
-        // Correção de escala para evitar o "mascote gigante" no iOS
-        // Se o seu USDZ foi feito em centímetros, o iOS lê como metros.
-        // O código abaixo tenta suavizar, mas o ideal é exportar o USDZ menor.
-        modelViewer.addEventListener('load', () => {
-            if (/iPhone|iPad|iPod/.test(navigator.userAgent)) {
-                modelViewer.scale = "0.1 0.1 0.1"; // Tenta forçar 10% do tamanho
-            }
-        });
-    </script>
+            // opcional: tocar áudio
+            console.log("AR iniciado no iPhone");
+
+        }
+    }
+});
+
+</script>
+
 </body>
 </html>
