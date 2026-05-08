@@ -6,82 +6,98 @@
     <title>Confra Mult Engrenagens</title>
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; }
-        model-viewer { width: 100vw; height: 100vh; }
-        
-        /* Estilo da etiqueta de texto que funciona em RA */
-        .hotspot {
-            background: rgba(0, 0, 0, 0.8);
-            border-radius: 10px;
-            border: 2px solid #FFD700;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.25);
-            color: white;
-            display: block;
-            font-family: Arial, sans-serif;
-            font-size: 14px;
-            padding: 15px;
-            width: 250px;
-            white-space: pre-wrap; /* Mantém as quebras de linha */
-        }
+        body { margin: 0; background: #f4f4f4; font-family: sans-serif; }
+        model-viewer { width: 100vw; height: 100vh; --poster-color: transparent; }
 
-        #ar-button {
-            background-color: #004a8d;
-            color: white;
-            border-radius: 8px;
-            border: none;
-            position: absolute;
-            bottom: 50px;
+        /* Container do Texto - Fica fixo na tela para não sumir no iPhone */
+        #text-overlay {
+            position: fixed;
+            bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            padding: 15px 25px;
+            width: 85%;
+            max-width: 400px;
+            background: rgba(0, 74, 141, 0.9); /* Azul Mult */
+            color: white;
+            padding: 20px;
+            border-radius: 15px;
+            border: 2px solid #FFD700;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+            z-index: 1000;
+            display: none; /* Só aparece quando clicar no AR */
+            pointer-events: none;
+        }
+
+        #typewriter { font-size: 16px; line-height: 1.5; font-weight: 500; white-space: pre-wrap; }
+
+        #ar-button {
+            background: #004a8d;
+            color: white;
+            border: none;
+            padding: 16px 32px;
+            border-radius: 50px;
             font-weight: bold;
-            z-index: 999;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
         }
     </style>
 </head>
 <body>
 
-    <!-- 
-      Ajustamos a SCALE para 0.5 0.5 0.5 (metade do tamanho). 
-      Se ainda estiver grande, mude para 0.2 0.2 0.2 
-    -->
     <model-viewer 
         src="mascote.glb" 
         ar 
         ar-modes="webxr scene-viewer quick-look" 
         camera-controls 
-        shadow-intensity="1" 
-        scale="0.5 0.5 0.5" 
+        shadow-intensity="1"
         ar-placement="floor"
         alt="Mascote Mult Engrenagens">
         
-        <!-- O Hotspot é a única forma de levar texto para dentro da RA do iPhone -->
-        <button class="hotspot" slot="hotspot-texto" data-position="0m 1.5m 0m" data-normal="0m 0m 1m">
-            <div id="typewriter-text"></div>
+        <button slot="ar-button" id="ar-button">
+            🚀 INICIAR EXPERIÊNCIA RA
         </button>
 
-        <button slot="ar-button" id="ar-button">
-            ✨ ABRIR EM REALIDADE AUMENTADA
-        </button>
+        <div id="text-overlay">
+            <div id="typewriter"></div>
+        </div>
     </model-viewer>
 
     <script>
-        const text = "Seja bem-vindo à Confra de 15 anos da Mult.\nEsperamos que aproveite bastante.\nA piscina está liberada.\nPrimeira atração às 13h.\nSe beber, não dirija!";
-        let i = 0;
-        const speed = 50;
+        const modelViewer = document.querySelector('model-viewer');
+        const overlay = document.getElementById('text-overlay');
+        const typewriter = document.getElementById('typewriter');
+        
+        const fullText = "Seja bem-vindo à Confra de 15 anos da Mult.\n\nEsperamos que aproveite bastante!\nA piscina está liberada.\nNossa primeira atração começa às 13h.\n\nDivirta-se e lembre-se: Se beber, não dirija.";
 
-        function typeWriter() {
-            if (i < text.length) {
-                document.getElementById("typewriter-text").innerHTML += text.charAt(i);
+        function startTyping() {
+            overlay.style.display = 'block';
+            typewriter.innerHTML = "";
+            let i = 0;
+            const interval = setInterval(() => {
+                typewriter.innerHTML += fullText.charAt(i);
                 i++;
-                setTimeout(typeWriter, speed);
-            }
+                if (i >= fullText.length) clearInterval(interval);
+            }, 40);
         }
 
-        // Inicia o efeito de máquina de escrever assim que a página carrega
-        // No iPhone (Quick Look), o texto será estático, mas esse script
-        // garante o efeito visual para quem visualizar no navegador.
-        window.onload = typeWriter;
+        // Monitor de estado para Android (WebXR)
+        modelViewer.addEventListener('ar-status', (event) => {
+            if (event.detail.status === 'session-started') {
+                startTyping();
+            }
+        });
+
+        // Fallback para iPhone (iOS Quick Look) e navegadores
+        // Como o iOS bloqueia o HTML dentro da RA, o texto aparecerá 
+        // antes ou logo após o usuário interagir.
+        modelViewer.addEventListener('click', () => {
+            if (overlay.style.display !== 'block') {
+                startTyping();
+            }
+        });
     </script>
 </body>
 </html>
