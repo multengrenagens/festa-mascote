@@ -6,98 +6,94 @@
     <title>Confra Mult Engrenagens</title>
     <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
     <style>
-        body { margin: 0; background: #f4f4f4; font-family: sans-serif; }
-        model-viewer { width: 100vw; height: 100vh; --poster-color: transparent; }
+        body { margin: 0; background: #004a8d; font-family: sans-serif; }
+        model-viewer { width: 100vw; height: 100vh; background-color: #ffffff; }
 
-        /* Container do Texto - Fica fixo na tela para não sumir no iPhone */
-        #text-overlay {
-            position: fixed;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 85%;
-            max-width: 400px;
-            background: rgba(0, 74, 141, 0.9); /* Azul Mult */
-            color: white;
-            padding: 20px;
-            border-radius: 15px;
+        /* Estilo da "etiqueta" que aparecerá no mundo real */
+        .desc-label {
+            background: rgba(0, 0, 0, 0.8);
+            color: #fff;
+            padding: 15px;
+            border-radius: 12px;
             border: 2px solid #FFD700;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.3);
-            z-index: 1000;
-            display: none; /* Só aparece quando clicar no AR */
-            pointer-events: none;
+            font-size: 16px;
+            width: 280px;
+            white-space: pre-wrap;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.5);
+            display: none; /* Só mostra quando a RA inicia */
         }
 
-        #typewriter { font-size: 16px; line-height: 1.5; font-weight: 500; white-space: pre-wrap; }
-
         #ar-button {
-            background: #004a8d;
-            color: white;
+            background: #FFD700;
+            color: #004a8d;
             border: none;
-            padding: 16px 32px;
-            border-radius: 50px;
+            padding: 15px 30px;
+            border-radius: 30px;
             font-weight: bold;
             position: absolute;
-            top: 50%;
+            bottom: 30px;
             left: 50%;
-            transform: translate(-50%, -50%);
-            box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+            transform: translateX(-50%);
+            z-index: 100;
         }
     </style>
 </head>
 <body>
 
     <model-viewer 
+        id="mv-mult"
         src="mascote.glb" 
         ar 
         ar-modes="webxr scene-viewer quick-look" 
         camera-controls 
         shadow-intensity="1"
         ar-placement="floor"
-	scale="0.1 0.1 0.1"
-        alt="Mascote Mult Engrenagens">
+        scale="0.2 0.2 0.2"
+        min-camera-orbit="auto auto auto"
+        max-camera-orbit="auto auto auto">
         
-        <button slot="ar-button" id="ar-button">
-            🚀 INICIAR EXPERIÊNCIA RA
+        <!-- Esse botão é o que o iPhone tenta ler para mostrar o texto dentro da RA -->
+        <button id="hotspot-texto" class="desc-label" slot="hotspot-msg" data-position="0m 1m 0m" data-normal="0m 0m 1m">
+            <div id="typewriter-target"></div>
         </button>
 
-        <div id="text-overlay">
-            <div id="typewriter"></div>
-        </div>
+        <button slot="ar-button" id="ar-button">
+            ABRIR INTERAÇÃO (15 ANOS MULT)
+        </button>
     </model-viewer>
 
     <script>
-        const modelViewer = document.querySelector('model-viewer');
-        const overlay = document.getElementById('text-overlay');
-        const typewriter = document.getElementById('typewriter');
+        const modelViewer = document.querySelector('#mv-mult');
+        const textTarget = document.querySelector('#typewriter-target');
+        const hotspot = document.querySelector('#hotspot-texto');
         
-        const fullText = "Seja bem-vindo à Confra de 15 anos da Mult.\n\nEsperamos que aproveite bastante!\nA piscina está liberada.\nNossa primeira atração começa às 13h.\n\nDivirta-se e lembre-se: Se beber, não dirija.";
+        const fullText = "Seja bem-vindo à Confra de 15 anos da Mult.\nEsperamos que você aproveite bastante.\nA piscina está liberada para crianças e adultos.\nNossa primeira atração começa às 13 horas.\nDivirta-se e lembre-se: Se beber, não dirija.";
 
         function startTyping() {
-            overlay.style.display = 'block';
-            typewriter.innerHTML = "";
+            hotspot.style.display = 'block';
             let i = 0;
+            textTarget.innerHTML = "";
             const interval = setInterval(() => {
-                typewriter.innerHTML += fullText.charAt(i);
-                i++;
-                if (i >= fullText.length) clearInterval(interval);
-            }, 40);
+                if (i < fullText.length) {
+                    textTarget.innerHTML += fullText.charAt(i);
+                    i++;
+                } else {
+                    clearInterval(interval);
+                }
+            }, 50);
         }
 
-        // Monitor de estado para Android (WebXR)
+        // Para Android (WebXR)
         modelViewer.addEventListener('ar-status', (event) => {
             if (event.detail.status === 'session-started') {
                 startTyping();
             }
         });
 
-        // Fallback para iPhone (iOS Quick Look) e navegadores
-        // Como o iOS bloqueia o HTML dentro da RA, o texto aparecerá 
-        // antes ou logo após o usuário interagir.
-        modelViewer.addEventListener('click', () => {
-            if (overlay.style.display !== 'block') {
-                startTyping();
-            }
+        // Para iPhone (Como o Quick Look é fechado, o texto precisa ser carregado antes ou via toque)
+        // No iOS, se ele não carregar o hotspot, o texto aparecerá no modo 3D normal
+        modelViewer.addEventListener('load', () => {
+            startTyping();
         });
     </script>
 </body>
